@@ -1,0 +1,43 @@
+﻿@model VisioTet.Models.DiscountModel
+
+@{
+    ViewData["Title"] = "Discount Page";
+}
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h2 class="card-title text-center">Discount Calculator</h2>
+                    <form method="post" asp-action="CalculateDiscount">
+                        <div class="form-group">
+                            <label for="customerType">Customer Type:</label>
+                            <input type="text" class="form-control" id="customerType" name="customerType" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="pointReward">Point Reward:</label>
+                            <input type="number" class="form-control" id="pointReward" name="pointReward" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="totalBelanja">Total Belanja:</label>
+                            <input type="number" class="form-control" id="totalBelanja" name="totalBelanja" required>
+                        </div>
+                        <div class="text-center">
+                            <button type="submit" class="btn btn-primary">Calculate Discount</button>
+                        </div>
+                    </form>
+                    @if (ViewBag.Diskon != null)
+                    {
+                        <div class="result mt-3">
+                            <h4 class="text-center">Discount:</h4>
+                            <p class="text-center">@ViewBag.Diskon</p>
+                            <h4 class="text-center">Total Bayar:</h4>
+                            <p class="text-center">@ViewBag.TotalBayar</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
