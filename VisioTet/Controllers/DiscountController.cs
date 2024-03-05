@@ -1,16 +1,19 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
 using System.Reflection;
+using VisioTet.Data;
 using VisioTet.Models;
 
 namespace VisioTet.Controllers
 {
     public class DiscountController : Controller
     {
+        private readonly ApplicationDbContext _context;
         private readonly ILogger<DiscountController> _logger;
 
-        public DiscountController(ILogger<DiscountController> logger)
+        public DiscountController(ApplicationDbContext context, ILogger<DiscountController> logger)
         {
+            _context = context;
             _logger = logger;
         }
 
@@ -24,7 +27,7 @@ namespace VisioTet.Controllers
         {
             if (ModelState.IsValid)
             {
-                decimal diskon = CalculateDiscount(model.CustomerType, model.PointReward, model.TotalBelanja);
+                decimal diskon = CalculateDiscountAndSave(model.CustomerType, model.PointReward, model.TotalBelanja);
                 decimal totalBayar = model.TotalBelanja - diskon;
 
                 ViewBag.Diskon = diskon;
@@ -32,6 +35,46 @@ namespace VisioTet.Controllers
             }
 
             return View("Index", model);
+        }
+
+        private decimal CalculateDiscountAndSave(string customerType, int pointReward, decimal totalBelanja)
+        {
+            decimal diskon = CalculateDiscount(customerType, pointReward, totalBelanja);
+
+            // Save to database
+            string transactionId = GenerateTransactionId();
+            var transaction = new Discount
+            {
+                TransactionId = transactionId,
+                CustomerType = customerType,
+                PointReward = pointReward,
+                TotalBelanja = totalBelanja,
+                Discounts = diskon,
+                TransactionDate = DateTime.Now
+            };
+
+            _context.Discounts.Add(transaction);
+            _context.SaveChanges();
+
+            return diskon;
+        }
+
+        private string GenerateTransactionId()
+        {
+            string dateString = DateTime.Now.ToString("yyyyMMdd");
+
+            var lastTransaction = _context.Discounts
+                .Where(t => t.TransactionId.StartsWith(dateString))
+                .OrderByDescending(t => t.TransactionId)
+                .FirstOrDefault();
+
+            int runningNumber = (lastTransaction != null) ? int.Parse(lastTransaction.TransactionId.Substring(9)) + 1 : 1;
+
+            string formattedRunningNumber = runningNumber.ToString("00000");
+
+            string transactionId = dateString + "_" + formattedRunningNumber;
+
+            return transactionId;
         }
 
         private decimal CalculateDiscount(string customerType, int pointReward, decimal totalBelanja)
